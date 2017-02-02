@@ -21,6 +21,8 @@ page.settings.loadImages = false;//Script is much faster with this field set to 
 phantom.cookiesEnabled = true;
 phantom.javascriptEnabled = true;
 
+
+
 phantom.addCookie({
     "domain": ".bigbasket.com",
     "expirationDate": 2116587085.791514,
@@ -176,53 +178,52 @@ phantom.addCookie({
     "id": 11
 });
 
-console.log('Trying to connect');
+page.open('https://www.bigbasket.com/pc/bread-dairy-eggs/bread-bakery/', function () {
+  console.log('connected');
 
-//productLinks.forEach(function(value){
-  page.open('https://www.bigbasket.com/cl/fruits-vegetables/?nc=nb', function(status) {
-    console.log("Status: " + status);
-    if(status === "success") {
-      page.render('b.png');
-
-
-      var productLinks = page.evaluate(function() {
-        var divs = document.querySelectorAll('div.uiv2-list-box-img-block a'),
-        result = [];
-        //temp = result;
-        
-        for (var i = 0; i < divs.length; i++) {
-            result.push(divs[i].href);
-            //temp.push(divs[i].outerHTML);           
-        }
-
-        return result;
-
-      });
-
-      console.log(productLinks[1]);
-
-      for (var i = 0; i < productLinks.length; i++) {
-        //console.log(productVariant[i]);
-        
-        var entry = productLinks[i]+',\r\n';
-        console.log(i+'entry added');
-        fs.write('links.csv', entry, 'a');
-        //data[i] = productVariant[i];
-        //console.log(productName);
-
+  // Checks for bottom div and scrolls down from time to time
+  window.setInterval(function() {
+      // Checks if there is a div with class=".has-more-items" 
+      // (not sure if this is the best way of doing it)
+      var count = page.content.match('Page 7');
+      console.log('loading...');
+      // page.render('b.png');
+      // console.log('completed');
+      if(count === null) { // Didn't find
+        page.evaluate(function() {
+          // Scrolls to the bottom of page
+          window.document.body.scrollTop = document.body.scrollHeight;
+        });
       }
-      console.log(productLinks.length);
 
-    }
+      // var moreLink = page.evaluate(function() {
+      //   return document.querySelector('div.uiv2-product-Q-tabs a').href;
+      // });
 
-    else {
-      console.log("Cannot connect");
-      phantom.exit();
-    }
+      // if (moreLink != null) {
+      //   console.log('Found more links:'+moreLink);
+      // }
+      
+      else {
+        page.render('bb.png');
+        var productLinks = page.evaluate(function() {
+        
+          var divs = document.querySelectorAll('div.uiv2-list-box-img-block a'),
+          result = [];
+          //temp = result;
+          
+          for (var i = 0; i < divs.length; i++) {
+              result.push(divs[i].href);
+              //temp.push(divs[i].outerHTML);           
+          }
 
-    phantom.exit();
-  });
-//});
+          return result;
+        });
 
+        console.log(productLinks.length);
 
+        phantom.exit();
+      }
+  }, 500); // Number of milliseconds to wait between scrolls
 
+});
