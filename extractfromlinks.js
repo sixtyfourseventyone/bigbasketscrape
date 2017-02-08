@@ -21,7 +21,22 @@ page.settings.loadImages = false;//Script is much faster with this field set to 
 phantom.cookiesEnabled = true;
 phantom.javascriptEnabled = true;
 
+Array.prototype.contains = function(v) {
+    for(var i = 0; i < this.length; i++) {
+        if(this[i] === v) return true;
+    }
+    return false;
+};
 
+Array.prototype.unique = function() {
+    var arr = [];
+    for(var i = 0; i < this.length; i++) {
+        if(!arr.contains(this[i])) {
+            arr.push(this[i]);
+        }
+    }
+    return arr; 
+}
 
 phantom.addCookie({
     "domain": ".bigbasket.com",
@@ -181,6 +196,9 @@ phantom.addCookie({
 
 var content = fs.read('links.csv');
 
+var data = [];
+var unique = [];
+
 //console.log('read data:', content);
 
 var links = content.split(",\r\n");
@@ -246,12 +264,14 @@ function handle_page(url){
                 
                 var entry = productName+','+variant_qty+','+variant_attribute+','+variant_price+'\r\n';
                 console.log(i+'entry added');
-                fs.write('test.csv', entry, 'a');
+                data.push(entry);
+                //console.log('Data is as follows:'+data);
+                
                 //data[i] = productVariant[i];
                 //console.log(productName);
             }
 
-            setTimeout(next_page(),100);
+            setTimeout(next_page(data),100);
             //console.log(productName);
         //}
 
@@ -264,16 +284,25 @@ function handle_page(url){
     });
 }
 
-function next_page(){
+function next_page(data){
     var url = urls.shift();
     console.log('test'+url);
 
     if(!url){
+        console.log(data);
+        unique = data.unique();
+
+        for (var i = 0; i < unique.length; i++) {
+            fs.write('test.csv', unique[i], 'a');
+        }
+        
         phantom.exit(0);
     }
     handle_page(url);
 }
 
 next_page();
+
+
 
 
